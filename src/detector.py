@@ -4,6 +4,7 @@ from PIL import Image
 import torch
 from .model import PNet, RNet, ONet
 from .box_utils import nms, calibrate_box, get_image_boxes, convert_to_square, _preprocess
+from .utils import show_bboxes
 
 def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
                  nms_thresholds=[0.7, 0.7, 0.7]):
@@ -39,6 +40,11 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     bounding_boxes = convert_to_square(bounding_boxes)
     bounding_boxes[:, 0:4] = np.round(bounding_boxes[:, 0:4])
 
+    # Chilung Begin
+    chilung_image = show_bboxes(image, bounding_boxes, [])
+    chilung_image.show()
+    # Chilung End
+
     # STAGE 2
     img_boxes = get_image_boxes(bounding_boxes, image, size=24)
     img_boxes = torch.FloatTensor(img_boxes)
@@ -57,6 +63,11 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     bounding_boxes = convert_to_square(bounding_boxes)
     bounding_boxes[:, 0:4] = np.round(bounding_boxes[:, 0:4])
 
+    # Chilung Begin
+    chilung_image = show_bboxes(image, bounding_boxes, [])
+    chilung_image.show()
+    # Chilung End
+
     # STAGE 3
     img_boxes = get_image_boxes(bounding_boxes, image, size=48)
     if len(img_boxes) == 0: 
@@ -73,6 +84,11 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     offsets = offsets[keep]
     landmarks = landmarks[keep]
 
+    # Chilung Begin
+    chilung_image = show_bboxes(image, bounding_boxes, [])
+    chilung_image.show()
+    # Chilung End
+
     # compute landmark points
     width = bounding_boxes[:, 2] - bounding_boxes[:, 0] + 1.0
     height = bounding_boxes[:, 3] - bounding_boxes[:, 1] + 1.0
@@ -84,6 +100,11 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     keep = nms(bounding_boxes, nms_thresholds[2], mode='min')
     bounding_boxes = bounding_boxes[keep]
     landmarks = landmarks[keep]
+
+    # Chilung Begin
+    chilung_image = show_bboxes(image, bounding_boxes, [])
+    chilung_image.show()
+    # Chilung End
 
     return bounding_boxes, landmarks
 
