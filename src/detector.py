@@ -1,3 +1,4 @@
+import time
 import math
 import numpy as np
 from PIL import Image
@@ -12,7 +13,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     onet.eval()
     stage_1_b = stage_1_e = 0
     stage_2_b = stage_3_e = 0
-    stage_2_e = stage_3_b = 1
+    stage_2_e = stage_3_b = 0
 
     width, height = image.size
     min_length = min(height, width)
@@ -30,16 +31,20 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
         factor_count += 1
 
     # STAGE 1
+    tStart = time.time()
     bounding_boxes = []
     for s in scales:    # run P-Net on different scales
         boxes = run_first_stage(image, pnet, scale=s, threshold=thresholds[0])
         bounding_boxes.append(boxes)
     bounding_boxes = [i for i in bounding_boxes if i is not None]
     bounding_boxes = np.vstack(bounding_boxes)
+
     # Chilung Begin
     if stage_1_b == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'red')
         chilung_image.show()
+        print("shape of bounding box Pnet before NMS")
+        print(bounding_boxes.shape)
     # Chilung End
 
     keep = nms(bounding_boxes[:, 0:5], nms_thresholds[0])
@@ -52,11 +57,18 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     if stage_1_e == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'blue')
         chilung_image.show()
+        print("shape of bounding box Pnet after NMS")
+        print(bounding_boxes.shape)
     # Chilung End
+    tEnd = time.time()
+    print ("Pnet cost %f sec" % (tEnd - tStart))
 
     # STAGE 2
+    tStart = time.time()
     img_boxes = get_image_boxes(bounding_boxes, image, size=24)
     img_boxes = torch.FloatTensor(img_boxes)
+    print("input of Rnet")
+    print(img_boxes.shape)
     output = rnet(img_boxes)
     offsets = output[0].data.numpy()  # shape [n_boxes, 4]
     probs = output[1].data.numpy()  # shape [n_boxes, 2]
@@ -69,6 +81,8 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     if stage_2_b == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'red')
         chilung_image.show()
+        print("shape of bounding box Rnet before NMS")
+        print(bounding_boxes.shape)
     # Chilung End
 
     keep = nms(bounding_boxes, nms_thresholds[1])
@@ -81,13 +95,20 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     if stage_2_e == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'blue')
         chilung_image.show()
+        print("shape of bounding box Rnet after NMS")
+        print(bounding_boxes.shape)
     # Chilung End
+    tEnd = time.time()
+    print ("Rnet cost %f sec" % (tEnd - tStart))
 
     # STAGE 3
+    tStart = time.time()
     img_boxes = get_image_boxes(bounding_boxes, image, size=48)
     if len(img_boxes) == 0: 
         return [], []
     img_boxes = torch.FloatTensor(img_boxes)
+    print("input of Onet")
+    print(img_boxes.shape)
     output = onet(img_boxes)
     landmarks = output[0].data.numpy()  # shape [n_boxes, 10]
     offsets = output[1].data.numpy()  # shape [n_boxes, 4]
@@ -103,6 +124,8 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     if stage_3_b == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'red')
         chilung_image.show()
+        print("shape of bounding box Onet before NMS")
+        print(bounding_boxes.shape)
     # Chilung End
 
     # compute landmark points
@@ -121,7 +144,11 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     if stage_3_e == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'blue')
         chilung_image.show()
+        print("shape of bounding box Onet after NMS")
+        print(bounding_boxes.shape)
     # Chilung End
+    tEnd = time.time()
+    print ("Onet cost %f sec" % (tEnd - tStart))
 
     return bounding_boxes, landmarks
 
@@ -135,6 +162,8 @@ def run_first_stage(image, net, scale, threshold):
     img = np.asarray(img, 'float32')
     img = torch.FloatTensor(_preprocess(img))
 
+    print("input of Pnet")
+    print(img.shape)
     output = net(img)
     probs = output[1].data.numpy()[0, 1, :, :]
     offsets = output[0].data.numpy()
