@@ -12,8 +12,8 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     pnet, rnet, onet= PNet(), RNet(), ONet()
     onet.eval()
     stage_1_b = stage_1_e = 0
-    stage_2_b = stage_3_e = 0
-    stage_2_e = stage_3_b = 0
+    stage_2_b = stage_2_e = 0
+    stage_3_b = stage_3_e = 0
 
     width, height = image.size
     min_length = min(height, width)
@@ -42,7 +42,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     # Chilung Begin
     if stage_1_b == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'red')
-        chilung_image.show()
+        chilung_image.save("stage_1_b.bmp")
         print("shape of bounding box Pnet before NMS")
         print(bounding_boxes.shape)
     # Chilung End
@@ -56,7 +56,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     # Chilung Begin
     if stage_1_e == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'blue')
-        chilung_image.show()
+        chilung_image.save("stage_1_e.bmp")
         print("shape of bounding box Pnet after NMS")
         print(bounding_boxes.shape)
     # Chilung End
@@ -80,7 +80,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     # Chilung Begin
     if stage_2_b == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'red')
-        chilung_image.show()
+        chilung_image.save("stage_2_b.bmp")
         print("shape of bounding box Rnet before NMS")
         print(bounding_boxes.shape)
     # Chilung End
@@ -94,7 +94,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     # Chilung Begin
     if stage_2_e == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'blue')
-        chilung_image.show()
+        chilung_image.save("stage_2_e.bmp")
         print("shape of bounding box Rnet after NMS")
         print(bounding_boxes.shape)
     # Chilung End
@@ -123,7 +123,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     # Chilung Begin
     if stage_3_b == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'red')
-        chilung_image.show()
+        chilung_image.save("stage_3_b.bmp")
         print("shape of bounding box Onet before NMS")
         print(bounding_boxes.shape)
     # Chilung End
@@ -143,7 +143,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8],
     # Chilung Begin
     if stage_3_e == 1:
         chilung_image = show_bboxes(image, bounding_boxes, [], 'blue')
-        chilung_image.show()
+        chilung_image.save("stage_3_e.bmp")
         print("shape of bounding box Onet after NMS")
         print(bounding_boxes.shape)
     # Chilung End
@@ -173,6 +173,12 @@ def run_first_stage(image, net, scale, threshold):
         return None
 
     keep = nms(boxes[:, 0:5], overlap_threshold=0.5)
+    
+    #img = image.resize((sw, sh), Image.BILINEAR)
+    #img.save("%f-resize.bmp" % scale)
+    #chilung_image = show_bboxes(image, boxes[keep], [], 'red')
+    #chilung_image.save("%f.bmp" % scale)
+    
     return boxes[keep]
 
 
